@@ -24,7 +24,7 @@ email_ = os.environ.get('Email_details')
 email_password = os.environ.get('Email_password')
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL','sqlite:///blog.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///blog.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager.init_app(app)
@@ -161,14 +161,19 @@ def show_post(post_id):
         is_admin = False
     requested_post = BlogPost.query.get(post_id)
     if form.validate_on_submit():
-        comment = form.comment.data
-        new_comment = Comment(
-            text=comment,
-            comment_author=current_user,
-            blog=requested_post
-        )
-        db.session.add(new_comment)
-        db.session.commit()
+        if current_user.is_authenticated:
+            comment = form.comment.data
+            new_comment = Comment(
+                text=comment,
+                comment_author=current_user,
+                blog=requested_post
+            )
+            db.session.add(new_comment)
+            db.session.commit()
+        else:
+            form = LoginForm()
+            error = 'you need to login to comment'
+            return render_template('login.html', error=error,form=form)
     return render_template("post.html", post=requested_post, admin=is_admin, logged_in=current_user.is_authenticated,
                            form=form)
 
@@ -223,7 +228,7 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form, logged_in=True)
 
 
-@app.route("/delete/<int:post_id>",methods=['GET',"POST"])
+@app.route("/delete/<int:post_id>", methods=['GET', "POST"])
 @admin_only
 def delete_post(post_id):
     post_to_delete = BlogPost.query.get(post_id)
