@@ -171,9 +171,8 @@ def show_post(post_id):
             db.session.add(new_comment)
             db.session.commit()
         else:
-            form = LoginForm()
             error = 'you need to login to comment'
-            return render_template('login.html', error=error,form=form)
+            return redirect(url_for('login',error=error))
     return render_template("post.html", post=requested_post, admin=is_admin, logged_in=current_user.is_authenticated,
                            form=form)
 
